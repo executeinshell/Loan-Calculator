@@ -1,10 +1,6 @@
 import math
 import sys
 
-args = sys.argv
-
-print(args[0])
-
 
 def calculate_repay_n():
     loan_principal = int(input('Enter the loan principal:'))

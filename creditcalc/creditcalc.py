@@ -1,71 +1,181 @@
 import math
 import sys
 
-
-def calculate_repay_n():
-    loan_principal = int(input('Enter the loan principal:'))
-    monthly_payment = int(input('Enter the monthly payment:'))
-    loan_interest = float(input('Enter the loan interest:'))
-
-    nominal_interest_rate = loan_interest / (12 * 100)
-
-    number_of_months = math.ceil(math.log(monthly_payment / (monthly_payment - nominal_interest_rate * loan_principal), 1 + nominal_interest_rate))
-
-    years = int(number_of_months / 12)
-    months = number_of_months % 12
-
-    print('It will take {} years and {} months to repay this loan!'.format(years, months))
+args = sys.argv
 
 
-def calculate_annuity():
-    loan_principal = int(input('Enter the loan principal:'))
-    number_of_periods = int(input('Enter the number of periods:'))
-    loan_interest = float(input('Enter the loan interest:'))
+def calculate_differential(principal, periods, interest):
+    principal = int(principal)
+    periods = int(periods)
+    interest = float(interest)
+    current_month = 1
+    overall_payment = 0
 
-    nominal_interest_rate = loan_interest / (12 * 100)
+    if principal > 0 and periods > 0 and interest > 0:
 
-    annuity_payment = math.ceil(loan_principal * ((nominal_interest_rate* math.pow(1 + nominal_interest_rate, number_of_periods)) /
-                               (math.pow(1 + nominal_interest_rate, number_of_periods) - 1)))
+        nominal_interest_rate = interest / (12 * 100)
 
-    print('Your monthly payment = {}'.format(annuity_payment))
+        for i in range(periods):
+            dm = (principal / periods) + nominal_interest_rate * \
+                 (principal - (principal * (current_month - 1) / periods))
+
+            print('Month {}: payment is {}'.format(
+                current_month, math.ceil(dm)))
+            current_month += 1
+            overall_payment = overall_payment + math.ceil(dm)
+        overpayment = overall_payment - principal
+        print('Overpayment = {}'.format(math.ceil(overpayment)))
+
+    else:
+        print('Incorrect parameters.')
 
 
-def calculate_principal():
-    annuity_payment = float(input('Enter the annuity payment:'))
-    number_of_periods = int(input('Enter the number of periods:'))
-    loan_interest = float(input('Enter the loan interest:'))
+def calculate_loan(payment, periods, interest):
+    payment = int(payment)
+    periods = int(periods)
+    interest = float(interest)
 
-    nominal_interest_rate = loan_interest / (12 * 100)
+    if payment > 0 and periods > 0 and interest > 0:
+        # print(payment, periods, interest)
 
-    principal = math.ceil(annuity_payment / ((nominal_interest_rate * math.pow(1 + nominal_interest_rate, number_of_periods)) /
-                                   (math.pow(1 + nominal_interest_rate, number_of_periods) - 1)))
+        nominal_interest_rate = interest / (12 * 100)
 
-    print('Your loan principal = {}'.format(principal))
+        principal = int(payment / ((nominal_interest_rate * \
+                                    math.pow(1 + nominal_interest_rate, periods)) /
+                                   (math.pow(1 + nominal_interest_rate, periods) - 1)))
+
+        print('Your loan principal = {}'.format(principal))
+        overpayment = payment * periods - principal
+        print('Overpayment = {}'.format(math.ceil(overpayment)))
+
+    else:
+        print('Incorrect parameters.')
+
+
+def calculate_repay(principal, payment, interest):
+    principal = int(principal)
+    payment = int(payment)
+    interest = float(interest)
+
+    if principal > 0 and payment > 0 and interest > 0:
+
+        nominal_interest_rate = interest / (12 * 100)
+
+        number_of_months = math.ceil(math.log(payment /
+                                              (payment - nominal_interest_rate * principal), 1 + \
+                                              nominal_interest_rate))
+
+        years = int(number_of_months / 12)
+        months = number_of_months % 12
+
+        overpayment = number_of_months * payment - principal
+        if months > 0:
+            print('It will take {} years and {} months to repay this loan!'.format(years, months))
+
+        print('It will take {} years to repay this loan!'.format(years))
+        print('Overpayment = {}'.format(overpayment))
+
+    else:
+        print('Incorrect parameters.')
+
+
+def calculate_periods(principal, periods, interest):
+    principal = int(principal)
+    periods = int(periods)
+    interest = float(interest)
+
+    if principal > 0 and periods > 0 and interest > 0:
+
+        nominal_interest_rate = interest / (12 * 100)
+
+        annuity_payment = math.ceil(principal * ((nominal_interest_rate * math.pow(1 + nominal_interest_rate, periods)) /
+                               (math.pow(1 + nominal_interest_rate, periods) - 1)))
+
+        print('Your annuity payment = {}!'.format(annuity_payment))
+        overpayment = annuity_payment * periods - principal
+        print('Overpayment = {}'.format(overpayment))
+
+    else:
+        print('Incorrect parameters.')
 
 
 def menu():
-    print('What do you want to calculate?')
-    print('type "n" for number of monthly payments,')
-    print('type "a" for annuity monthly payment amount,')
-    print('type "p" for loan principal:')
+    list_of_args = []
 
-    user_parameter = input()
+    for i in range(len(args)):
+        x = args[i].split('=')
+        list_of_args.append(x[0])
 
-    if user_parameter == 'n':
-        calculate_repay_n()
-    elif user_parameter == 'a':
-        calculate_annuity()
-    elif user_parameter == 'p':
-        calculate_principal()
+    if args[1] == '--type=diff' and len(args) == 5:
+        x = args[2].split('=')
+        if x[0] == '--principal':
+            x2 = args[3].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x2[0] == '--periods':
+            x3 = args[4].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x3[0] == '--interest':
+            calculate_differential(x[1], x2[1], x3[1])
+        else:
+            print('Incorrect parameters.')
+            return
+    elif args[1] == '--type=annuity' and len(args) == 5 and list_of_args[3] == '--payment':
+        x = args[2].split('=')
+        if x[0] == '--principal':
+            x1 = args[3].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x1[0] == '--payment':
+            x2 = args[4].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x2[0] == '--interest':
+            calculate_repay(x[1], x1[1], x2[1])
+        else:
+            print('Incorrect parameters.')
+            return
+    elif args[1] == '--type=annuity' and len(args) == 5 and list_of_args[2] == '--payment':
+        x = args[2].split('=')
+        if x[0] == '--payment':
+            x1 = args[3].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x1[0] == '--periods':
+            x2 = args[4].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x2[0] == '--interest':
+            calculate_loan(x[1], x1[1], x2[1])
+        else:
+            print('Incorrect parameters.')
+            return
+    elif args[1] == '--type=annuity' and len(args) == 5 and list_of_args[3] == '--periods':
+        x = args[2].split('=')
+        if x[0] == '--principal':
+            x1 = args[3].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x1[0] == '--periods':
+            x2 = args[4].split('=')
+        else:
+            print('Incorrect parameters.')
+            return
+        if x2[0] == '--interest':
+            calculate_periods(x[1], x1[1], x2[1])
+        else:
+            print('Incorrect parameters.')
+            return
+    else:
+        print('Incorrect parameters')
 
 
 menu()
-
-
-
-
-
-
-
-
-
